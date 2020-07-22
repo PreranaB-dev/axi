@@ -44,10 +44,11 @@ logic mem_w_last;
 logic [DATA_BITS/8 -1 : 0] mem_w_strb;
 logic ready;
 logic wr_en;
+logic wr_resp;
 
-parameter IDLE		= 2'b00;
-	  DATA_PHASE	= 2'b01;
-	  LAST_PHASE	= 2'b10;
+parameter IDLE		= 2'b00,
+	  DATA_PHASE	= 2'b01,
+	  LAST_PHASE	= 2'b10,
 	  RESP_PHASE	= 2'b11;
 
 logic [1:0] state, next_state;
@@ -118,6 +119,18 @@ begin
 		aw_ready <= ready;
 end
 
+always @(posedge aclk or negedge areset_n )
+begin	
+	if (~areset_n)
+	begin
+		b_valid <= 0 ;
+		b_resp	<= 2'b0;
+	end
+	else if (wr_resp)
+		b_valid	<= 1;
+	else
+		b_valid <= 0;
+end
 
 always_comb 
 begin 
@@ -160,11 +173,16 @@ begin
 				next_state = RESP_PHASE;
 			end
 	RESP_PHASE:
-			if ((b_ready == 1 ) && w_last == 1)
+			if (w_last)
 			begin
 				w_en    = 0;
-			       	b_valid = 1;
-				b_resp  = 2'b00;
+				wr_resp = 1;
+			       //	b_valid = 1;
+		 	      //	b_resp  = 2'b00;
+			end
+			else 
+			begin
+				wr_resp = 0;
 				next_state = IDLE;
 			end
 	endcase
@@ -175,6 +193,7 @@ end
 
 endmodule
 
+//memory address increment still pending
 
 
 

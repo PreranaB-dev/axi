@@ -32,8 +32,8 @@ logic r_last_int;
 logic [1:0] r_resp_int;
 
 
-parameter IDLE          = 2'b00;
-          READ_ADD     = 2'b01;
+parameter IDLE         = 2'b00,
+          READ_ADD     = 2'b01,
           READ_DATA    = 2'b10;
 
 logic [1:0] state;

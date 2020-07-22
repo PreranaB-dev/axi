@@ -36,9 +36,9 @@ module axi_master_wr ( input aclk,
 
 logic [LEN_BITS-1 : 0] w_data_sent;
 
-parameter IDLE		= 2'b00;
-	  WRITE_ADD	= 2'b01;
-	  WRITE_DATA	= 2'b10;
+parameter IDLE		= 2'b00,
+	  WRITE_ADD	= 2'b01,
+	  WRITE_DATA	= 2'b10,
 	  WRITE_RESP	= 2'b11;
 
 logic [1:0] state;
