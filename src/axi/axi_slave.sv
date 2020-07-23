@@ -132,18 +132,22 @@ begin
 		mem_aw_cache 	<= 4'b0;
 	       	//mem_aw_valid	 <= 1'b0;
 	end
+	else if (latch_wr_ctrl) 
+	begin
+		mem_aw_addr     <= aw_addr;
+	       	mem_aw_len      <= aw_len;
+	       	mem_aw_size     <= aw_size;
+		mem_aw_burst    <= aw_burst;
+		mem_aw_cache    <= aw_cache;
+	end
 	else
 	begin
-		if (latch_wr_ctrl) 
-		begin
-			 mem_aw_addr     <= aw_addr;
-			 mem_aw_len      <= aw_len;
-			 mem_aw_size     <= aw_size;
-			 mem_aw_burst    <= aw_burst;
-			 mem_aw_cache    <= aw_cache;
-		 end
+		if( latch_wr_data )
+			mem_aw_len	<= wr_len;
+			mem_aw_addr	<= mem_aw_addr + 1;
 	end
 end
+
 
 always @(posedge aclk or negedge areset_n)
 begin
@@ -202,7 +206,8 @@ begin
 	WRITE_IDLE: 
 		if ( aw_ready && aw_valid)
 		begin
-			latch_ctrl = 1;
+			latch_wr_ctrl = 1;
+			latch_wr_data = 0;
 			ready	   = 0;
 			if (aw_len == {`LEN_BITS {1'B0}})
 				wr_next_state = WR_LAST_PHASE;
@@ -214,7 +219,8 @@ begin
 		if ( w_valid && w_ready )
 		begin
 			wr_en = 1;
-			latch_wr_data = 1;
+			latch_wr_ctrl	= 0;
+			latch_wr_data	= 1;
 			wr_len = wr_len -1;
 			if (wr_len == {`LEN_BITS {1'b0}})
 				wr_next_state = WR_LAST_PHASE;
@@ -252,6 +258,7 @@ end
 //------------------------READ_CYCLE----------------------------------------
 //--------------------------------------------------------------------------
 
+
 always @(posedge aclk or negedge areset_n)
 begin
 	if (~areset_n)
@@ -260,6 +267,14 @@ begin
 		rd_state	<= rd_next_state;
 end
 
+
+always @(posedge aclk or negedge areset_n)
+begin
+	if (~areset_n)
+		ar_ready <= 1;
+	else 
+		ar_ready <= rd_ar_ready;
+end
 
 
 always @(posedge aclk or negedge areset_n)
@@ -280,7 +295,17 @@ begin
 		mem_ar_burst	<= ar_burst;
 		mem_ar_cache	<= ar_cache;
 	end
+	else
+	begin
+		if (send_data_flag)
+		begin
+			mem_ar_len <= rd_len;
+			mem_ar_addr<= mem_ar_addr + 1;
+		end
+	end
+
 end
+
 
 always @(posedge aclk or negedge areset_n)
 begin
@@ -312,7 +337,7 @@ begin
 	send_data_flag	= 0;
 	rd_next_state	= rd_state;
 	rd_len		= mem_ar_len;
-	rd_ar_ready	= ar_ready;
+	rd_ar_ready	= ar_ready;   
 	rd_en		= 0;
 	case (state)
 	READ_IDLE:
@@ -320,6 +345,7 @@ begin
 		begin
 			latch_rd_ctrl	= 1;
 			rd_ar_ready	= 0;
+			send_data_flag	= 0;
 			if (ar_len == {`LEN_BITS {1'b0}})
 				rd_next_state = RD_LAST_PHASE;
 			else 
@@ -330,8 +356,9 @@ begin
 		if (r_ready) 
 		begin
 			rd_en		= 1;
-			send_data_flag 	= 1;
-			rd_len		= len -1;
+			latch_rd_ctrl	= 0;				//When in data phase no new control will be latched
+			send_data_flag	= 1;
+			rd_len		= rd_len -1;
 			if (rd_len == {`LEN_BITS{1'b0}})
 			       	rd_next_state = RD_LAST_PHASE;
 	       		else

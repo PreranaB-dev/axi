@@ -61,7 +61,7 @@ always @(posedge aclk or negedge areset_n)
 			ar_cache	<= 4'b0000;
 	        	ar_valid	<= 1'b0;
                         
-                       	r_data_int	<= {`DATA_BITS {1'b0}};
+                        r_data_int	<= {`DATA_BITS {1'b0}};
 			r_valid_int	<= 1'b0;
 			r_last_int	<= 1'b0;
 			r_resp_int	<= 2'b00;
