@@ -1,3 +1,10 @@
+//================================================================
+//-------------------AXI MASTER-----------------------------------
+// Description :This is the axi master module .It is designed for 
+// 		supporting read and write transactions.It currently 
+// 		supports fixed burst mode.
+// Warning     : No guarantee. Use at your own risk.
+//================================================================
 
 `include "define.sv"
 module axi_master ( input aclk,

@@ -1,3 +1,10 @@
+//================================================================
+//---------AXI MASTER WRITE INTERFACE-----------------------------------
+// Description : This is the axi master write interface. It supports
+//               single transaction for fixed burst mode. 
+//               Working on others as well.
+// Warning     : No guarantee. Use at your own risk.
+//================================================================
 
 `include "define.sv"
 module axi_master_wr ( input aclk,

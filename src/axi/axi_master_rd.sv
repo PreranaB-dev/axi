@@ -1,3 +1,11 @@
+//================================================================
+//---------AXI MASTER READ INTERFACE-----------------------------------
+// Description : This is the axi master read interface. It supports
+//               fixed burst mode and single transaction currently. 
+//               Working on others as well.
+// Warning     : No guarantee. Use at your own risk.
+//================================================================
+
 `include "define.sv"
 module axi_master_rd ( input aclk,
                        input areset_n,

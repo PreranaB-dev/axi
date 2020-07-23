@@ -1,3 +1,14 @@
+//================================================================
+//--------------------AXI SLAVE-----------------------------------
+// Description : This is the axi slave module. It is designed for 
+// 		supporting read and write transactions currently for
+// 		fixed burst mode.It will be modified further for 
+// 		supporting other modes and strobe pin functionality 
+// 		will also be added. 
+//         
+// Warning     : No guarantee. Use at your own risk.
+//================================================================
+
 
 `include "define.sv"
 module axi_slave ( input aclk,
