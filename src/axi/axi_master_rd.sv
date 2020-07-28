@@ -6,35 +6,36 @@
 // Warning     : No guarantee. Use at your own risk.
 //================================================================
 
-`include "define.sv"
+`include "../src/defines/define.sv"
 module axi_master_rd ( input aclk,
                        input areset_n,
 	input ar_ready,
-	output logic [ADDR_BITS -1	: 0] ar_addr,
-	output logic [LEN_BITS -1	: 0] ar_len,
-	output logic [SIZE_BITS -1	: 0] ar_size,
+	output logic [`ADDR_BITS -1	: 0] ar_addr,
+	output logic [`LEN_BITS -1	: 0] ar_len,
+	output logic [`SIZE_BITS -1	: 0] ar_size,
 	output logic [1:0] ar_burst,
 	output logic [3:0] ar_cache,
 	output logic ar_valid,
 
 //READ DATA CHANNEL SIGNALS
 	output logic r_ready,
-	input [DATA_BITS -1	: 0] r_data,
+	input [`DATA_BITS -1	: 0] r_data,
 	input r_valid,
 	input r_last,
 	input [1:0] r_resp,
 
 //TB DRIVEN INPUTS
         
-        input [ADDR_BITS -1 : 0] ARADDR,
-	input [LEN_BITS -1 : 0] ARLEN,
-        input [SIZE_BITS -1 : 0] ARSIZE,
+        input [`ADDR_BITS -1 : 0] ARADDR,
+	input [`LEN_BITS -1 : 0] ARLEN,
+        input [`SIZE_BITS -1 : 0] ARSIZE,
 	input [1:0] ARBURST,
-	input [3:0] ARCACHE
+	input [3:0] ARCACHE,
+	input ARVALID
 );
 
 
-logic [DATA_BITS -1 : 0] r_data_int;
+logic [`DATA_BITS -1 : 0] r_data_int;
 logic r_valid_int;
 logic r_last_int;
 logic [1:0] r_resp_int;
@@ -48,7 +49,21 @@ logic [1:0] state;
 
 always @(posedge aclk or negedge areset_n)
         if (~areset_n)
-                state   <= IDLE;
+	begin
+		state		<= IDLE;
+		ar_addr		<= {`ADDR_BITS {1'b0}};
+      		ar_len		<= {`LEN_BITS {1'b0}};
+		ar_size		<= {`SIZE_BITS {1'b0}};
+		ar_burst	<= 2'b00;
+		ar_cache	<= 4'b0000;
+	        ar_valid	<= 1'b0;
+                        
+                r_data_int	<= {`DATA_BITS {1'b0}};
+		r_valid_int	<= 1'b0;
+		r_last_int	<= 1'b0;
+		r_resp_int	<= 2'b00;
+		r_ready		<= 1'b1 ;
+        end
         else
         begin
                 case (state)
@@ -66,7 +81,10 @@ always @(posedge aclk or negedge areset_n)
 			r_last_int	<= 1'b0;
 			r_resp_int	<= 2'b00;
 			r_ready		<= 1'b1 ;
-		        state           <= READ_ADD;
+			if (ARVALID)
+		        	state           <= READ_ADD;
+			else
+				state		<= IDLE;
                 end
 
  		READ_ADD :
@@ -76,17 +94,12 @@ always @(posedge aclk or negedge areset_n)
                         ar_size		<= ARSIZE;
                         ar_burst	<= ARBURST;
                         ar_cache	<= ARCACHE;
+			ar_valid	<= ARVALID;
 
 			if (ar_ready)
-                        begin
-                                ar_valid <= 1'b0;
-                                state    <= READ_DATA;
-                        end
+				state    <= READ_DATA;
                         else
-                        begin
-                                ar_valid  <= 1'b1;
-                                state     <= READ_ADD;
-                        end
+				state     <= READ_ADD;
                 end
 
                 READ_DATA :

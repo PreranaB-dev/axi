@@ -10,69 +10,69 @@
 //================================================================
 
 
-`include "define.sv"
+`include "/home/prerana/axi/src/defines/define.sv"
 module axi_slave ( input aclk,
 		    input areset_n,
 
 //WRITE ADDRESS CHANNEL SIGNALS
-	output aw_ready,
-	input [ADDR_BITS -1	: 0] aw_addr,
-	input [LEN_BITS -1	: 0] aw_len,
-	input [SIZE_BITS -1	: 0] aw_size,
+	output logic aw_ready,
+	input [`ADDR_BITS -1	: 0] aw_addr,
+	input [`LEN_BITS -1	: 0] aw_len,
+	input [`SIZE_BITS -1	: 0] aw_size,
 	input [1:0] aw_burst,
 	input [3:0] aw_cache,
 	input aw_valid,
 	
 //WRITE DATA CHANNEL SIGNALS		    
-	output w_ready,
-	input [DATA_BITS -1	: 0] w_data,
+	output  w_ready,
+	input [`DATA_BITS -1	: 0] w_data,
 	input w_valid,
 	input w_last,
-	input [DATA_BITS/8 -1	: 0] w_strb,
+	input [`DATA_BITS/8 -1	: 0] w_strb,
 
 //WRITE RESPONSE SIGNALS	
-	output b_valid,
+	output logic b_valid,
 	input b_ready,
-	output [1:0] b_resp,
+	output logic [1:0] b_resp,
 
 //READ ADDRESS CHANNEL SIGNALS
-	output ar_ready,
-	input [ADDR_BITS -1	: 0] ar_addr,
-	input [LEN_BITS -1	: 0] ar_len,
-	input [SIZE_BITS -1	: 0] ar_size,
+	output logic ar_ready,
+	input [`ADDR_BITS -1	: 0] ar_addr,
+	input [`LEN_BITS -1	: 0] ar_len,
+	input [`SIZE_BITS -1	: 0] ar_size,
 	input [1:0] ar_burst,
 	input [3:0] ar_cache,
 	input ar_valid,
 
 //READ DATA CHANNEL SIGNALS
 	input r_ready,
-	output [DATA_BITS -1	: 0] r_data,
-	output r_valid,
-	output r_last,
-	output [1:0] r_resp
+	output logic [`DATA_BITS -1	: 0] r_data,
+	output logic r_valid,
+	output logic r_last,
+	output logic [1:0] r_resp
 );
 
 //--------------------------------------------------------------------------
 //----------------------WRITE_TRANSACTION_SIGNALS---------------------------
 //--------------------------------------------------------------------------
 
-logic w_ready = 1;
-logic b_valid = 0;
+assign w_ready = 1;
+//logic b_valid = 0;
 
 
-logic [DATA_BITS -1 : 0] mem [1024];
-logic [ADDR_BITS -1: 0] mem_aw_addr;
-logic [LEN_BITS -1 : 0] mem_aw_len;
-logic [LEN_BITS -1 : 0] wr_len;
-logic [SIZE_BITS -1: 0] mem_aw_size;
+logic [`DATA_BITS -1 : 0] mem [1024];
+logic [`ADDR_BITS -1: 0] mem_aw_addr;
+logic [`LEN_BITS -1 : 0] mem_aw_len;
+logic [`LEN_BITS -1 : 0] wr_len;
+logic [`SIZE_BITS -1: 0] mem_aw_size;
 logic [1:0] mem_aw_burst;
 logic [3:0] mem_aw_cache;
 logic mem_aw_valid;
 
-logic [DATA_BITS -1 : 0] mem_w_data;
+logic [`DATA_BITS -1 : 0] mem_w_data;
 logic mem_w_valid;
 logic mem_w_last;
-logic [DATA_BITS/8 -1 : 0] mem_w_strb;
+logic [`DATA_BITS/8 -1 : 0] mem_w_strb;
 logic ready;
 logic wr_en;
 logic wr_resp;
@@ -89,13 +89,13 @@ logic latch_wr_ctrl, latch_wr_data;
 //----------------READ_TRANSACTION_SIGNALS----------------------------------
 //--------------------------------------------------------------------------
 
-logic mem_ar_addr [ADDR_BITS - 1	: 0];
-logic mem_ar_len  [LEN_BITS - 1		: 0];
-logic mem_ar_size  [SIZE_BITS -1	: 0];
-logic mem_ar_burst [1:0];
-logic mem_ar_cache [3:0];
+logic [`ADDR_BITS - 1	: 0] mem_ar_addr; 
+logic [`LEN_BITS - 1	: 0] mem_ar_len; 
+logic [`SIZE_BITS -1	: 0] mem_ar_size; 
+logic [1:0] mem_ar_burst;
+logic [3:0] mem_ar_cache;
 
-logic [LEN_BITS -1	: 0] rd_len;
+logic [`LEN_BITS -1	: 0] rd_len;
 logic rd_en;
 logic rd_ar_ready;
 logic latch_rd_ctrl;
@@ -160,15 +160,15 @@ end
 always @(posedge aclk or negedge areset_n)
 begin
 	if (~areset_n)
-		mem_wr_valid <= 0;
+		mem_w_valid <= 0;
 	else
-		mem_wr_valid <= wr_en;	
+		mem_w_valid <= wr_en;	
 end
 
 
 always_ff @(posedge aclk)
 begin 
-	if (mem_wr_valid)
+	if (mem_w_valid)
 		mem[mem_aw_addr] <= mem_w_data;
 end
 
@@ -198,7 +198,7 @@ always_comb
 begin 
 	latch_wr_ctrl = 0;
 	latch_wr_data = 0;
-	wr_next_state = state;
+	wr_next_state = wr_state;
 	wr_len = mem_aw_len;
 	ready = aw_ready;
 	wr_en = 0;
@@ -239,7 +239,7 @@ begin
 	WR_RESP_PHASE:
 			if (w_last)
 			begin
-				w_en    = 0;
+				wr_en    = 0;
 				wr_resp = 1;
 			       //	b_valid = 1;
 		 	      //	b_resp  = 2'b00;
@@ -339,7 +339,7 @@ begin
 	rd_len		= mem_ar_len;
 	rd_ar_ready	= ar_ready;   
 	rd_en		= 0;
-	case (state)
+	case (rd_state)
 	READ_IDLE:
 		if(ar_ready && ar_valid)
 		begin

@@ -6,25 +6,25 @@
 // Warning     : No guarantee. Use at your own risk.
 //================================================================
 
-`include "define.sv"
+`include "../src/defines/define.sv"
 module axi_master ( input aclk,
 		    input areset_n,
 
 //WRITE ADDRESS CHANNEL SIGNALS
 	input aw_ready,
-	output logic [ADDR_BITS -1	: 0] aw_addr,
-	output logic [LEN_BITS -1	: 0] aw_len,
-	output logic [SIZE_BITS -1	: 0] aw_size,
+	output logic [`ADDR_BITS -1	: 0] aw_addr,
+	output logic [`LEN_BITS -1	: 0] aw_len,
+	output logic [`SIZE_BITS -1	: 0] aw_size,
 	output logic [1:0] aw_burst,
 	output logic [3:0] aw_cache,
 	output logic aw_valid,
 	
 //WRITE DATA CHANNEL SIGNALS		    
 	input w_ready,
-	output logic [DATA_BITS -1	: 0] w_data,
+	output logic [`DATA_BITS -1	: 0] w_data,
 	output logic w_valid,
 	output logic w_last,
-	output logic [DATA_BITS/8 -1	: 0] w_strb,
+	output logic [`DATA_BITS/8 -1	: 0] w_strb,
 
 //WRITE RESPONSE SIGNALS	
 	input b_valid,
@@ -33,33 +33,35 @@ module axi_master ( input aclk,
 
 //READ ADDRESS CHANNEL SIGNALS
 	input ar_ready,
-	output logic [ADDR_BITS -1	: 0] ar_addr,
-	output logic [LEN_BITS -1	: 0] ar_len,
-	output logic [SIZE_BITS -1	: 0] ar_size,
+	output logic [`ADDR_BITS -1	: 0] ar_addr,
+	output logic [`LEN_BITS -1	: 0] ar_len,
+	output logic [`SIZE_BITS -1	: 0] ar_size,
 	output logic [1:0] ar_burst,
 	output logic [3:0] ar_cache,
 	output logic ar_valid,
 
 //READ DATA CHANNEL SIGNALS
 	output logic r_ready,
-	input [DATA_BITS -1	: 0] r_data,
+	input [`DATA_BITS -1	: 0] r_data,
 	input r_valid,
 	input r_last,
 	input [1:0] r_resp,
 
 //TB DRIVEN INPUTS
-        input [ADDR_BITS -1 : 0] AWADDR,
-	input [LEN_BITS -1 : 0]  AWLEN,
-	input [DATA_BITS -1 : 0] WDATA,
-        input [SIZE_BITS -1 : 0] AWSIZE,
+        input [`ADDR_BITS -1 : 0] AWADDR,
+	input [`LEN_BITS -1 : 0]  AWLEN,
+	input [`DATA_BITS -1 : 0] WDATA,
+        input [`SIZE_BITS -1 : 0] AWSIZE,
         input [1:0] AWBURST,
 	input [3:0] AWCACHE,
+	input AWVALID,
 
-        input [ADDR_BITS -1 : 0] ARADDR,
-	input [LEN_BITS -1 : 0] ARLEN,
-        input [SIZE_BITS -1 : 0] ARSIZE,
+        input [`ADDR_BITS -1 : 0] ARADDR,
+	input [`LEN_BITS -1 : 0] ARLEN,
+        input [`SIZE_BITS -1 : 0] ARSIZE,
 	input [1:0] ARBURST,
-	input [3:0] ARCACHE
+	input [3:0] ARCACHE,
+	input ARVALID
        
 );
 
@@ -90,13 +92,14 @@ axi_master_wr master_wr_inst ( .aclk		(aclk),
 		.b_resp		(b_resp),
 
 //TB DRIVEN INPUTS
-        	.AWADDR		(AWAADR),
+        	.AWADDR		(AWADDR),
 		.AWLEN		(AWLEN),
 		.WDATA		(WDATA),
         	.AWSIZE		(AWSIZE),
 		.AWBURST	(AWBURST),
-		.AWCACHE	(AWCACHE)
-	)
+		.AWCACHE	(AWCACHE),
+		.AWVALID	(AWVALID)
+	);
 
 axi_master_rd master_rd_inst ( .aclk            (aclk),
                 .areset_n       (areset_n),
@@ -120,12 +123,13 @@ axi_master_rd master_rd_inst ( .aclk            (aclk),
                 .r_resp         (r_resp),
 
 //TB DRIVEN INPUTS
-                .ARADDR         (ARAADR),
+                .ARADDR         (ARADDR),
                 .ARLEN          (ARLEN),
                 .ARSIZE         (ARSIZE),
                 .ARBURST        (ARBURST),
-                .ARCACHE        (ARCACHE)
-        )
+                .ARCACHE        (ARCACHE),
+		.ARVALID	(ARVALID)
+        );
 
 
 endmodule
